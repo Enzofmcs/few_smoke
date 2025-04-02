@@ -15,22 +15,22 @@ import flet as ft
 
 def main(page: ft.Page):
     cart = {}
-    tobacco = ft.Image(src="tobacco.png", width=200, height=200)
-    cigars = ft.Image(src="cigars.png", width=200, height=200)
-    rolling_papers = ft.Image(src="rolling_papers.png", width=200, height=200)
+    tobacco = ft.Image(src="tobacco.png", width=150, height=150)
+    cigars = ft.Image(src="cigars.png", width=150, height=150)
+    rolling_papers = ft.Image(src="rolling_papers.png", width=150, height=150)
         
 
     def item_container(shop_item):
         hov_state = False
 
         add_button = ft.ElevatedButton(
-            content = ft.Icon(name=ft.Icons.FAVORITE, color="pink"),
+            content = ft.Icon(name=ft.Icons.ADD, color="green"),
             width=50,
             height=50,
             on_click=lambda e: add_to_cart(shop_item.src.split(".")[0]),
             visible=False,
         )
-        remove_button = ft.ElevatedButton(content=ft.Icon(name=ft.Icons.AUDIOTRACK, color="green"), width=50, height=50, visible=False, on_click=lambda e: remove_from_cart(shop_item.src.split(".")[0]))
+        remove_button = ft.ElevatedButton(content=ft.Icon(name=ft.Icons.REMOVE, color="red"), width=50, height=50, visible=False, on_click=lambda e: remove_from_cart(shop_item.src.split(".")[0]))
 
         def on_hov(e: ft.HoverEvent):
             nonlocal hov_state
@@ -49,10 +49,15 @@ def main(page: ft.Page):
         return ft.Container(
             content=ft.Column(
                 controls=[
+                    ft.Row(controls=[add_button, remove_button], alignment=ft.MainAxisAlignment.END, vertical_alignment=ft.CrossAxisAlignment.CENTER),
                 shop_item,
-                ft.Row(controls=[add_button, remove_button]),
+                ft.Text(f"Total: {cart.get(shop_item.src.split('.')[0], 0)}", color="black"),
+                ft.Text(shop_item.src.split(".")[0], color="black"),
             ],
-                spacing=10,
+                
+            alignment=ft.MainAxisAlignment.CENTER,  # Center vertically
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=10,
         ),
             alignment=ft.alignment.center,
             width=250,
@@ -72,31 +77,37 @@ def main(page: ft.Page):
             cart[item_name] -= 1
             print(f"Removed {item_name} from cart. Total: {cart[item_name]}")
 
-
+    row = ft.Row(
+        wrap=True,
+        spacing=10,
+        run_spacing=10,
+        alignment=ft.MainAxisAlignment.CENTER,
+        controls=[
+            item_container(tobacco),
+            item_container(cigars),
+            item_container(rolling_papers),
+            item_container(rolling_papers),
+            item_container(rolling_papers),
+            item_container(rolling_papers),
+            item_container(rolling_papers),
+            ],
+        width=page.width,
+        height=page.height,
+        scroll=ft.ScrollMode.AUTO,
+    )
 
     page.add(
         ft.Container(
-            ft.Column(
-                controls=[
-                    item_container(tobacco),
-                    item_container(cigars),
-                    item_container(rolling_papers),
-                    item_container(rolling_papers),
-                    item_container(rolling_papers),
-                    item_container(rolling_papers),
-                    item_container(rolling_papers),
-                ],
-                scroll=ft.ScrollMode.AUTO,
-                alignment=ft.alignment.center,
-                height=500,
-                width=500,
-                spacing=10,
-            ),
+            ft.Column([
+                row,
+            ],),
             alignment=ft.alignment.center,
-            height=500,
-            width=500,
+            adaptive=True,
+            padding=10,
+            margin=10,
             border=ft.border.all(1),
         )
+        
         
     )
 
