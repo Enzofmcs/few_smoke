@@ -1,64 +1,101 @@
 import flet as ft
+import platform
 
-# Creating a page with 3 items of the shop: Tobacco, Cigars, and Rolling Papers
-# I want a invisible button that appears when the  mouse is over the item
-# I want to add a button that will add the item to the cart when clicked
-# I want to add a button that will remove the item from the cart when clicked
-# I want to show how much items were added to the cart for each item
+class ShopItem:
+    def __init__(self, name, image_src, width=150, height=150):
+        self.name = name
+        self.image_src = image_src
+        self.image = ft.Image(src=image_src, width=width, height=height)
+        self.quantity_in_cart = 0
+        self.quantity_text = ft.Text(f"Total: {self.quantity_in_cart}", color="black")
+        self.name_text = ft.Text(self.name, color="black")
 
-
-
-
-#1. create a page with 1 item of the shop 
-#2. create a button that will add the item to the cart when clicked
-#3. create a button that will remove the item from the cart when clicked
-
-def main(page: ft.Page):
-    cart = {}
-    tobacco = ft.Image(src="tobacco.png", width=150, height=150)
-    cigars = ft.Image(src="cigars.png", width=150, height=150)
-    rolling_papers = ft.Image(src="rolling_papers.png", width=150, height=150)
+class ShopView:
+    def __init__(self, page):
+        self.page = page
+        self.items = [
+            ShopItem("tobacco", "tobacco.png"),
+            ShopItem("cigars", "cigars.png"),
+            ShopItem("rolling_papers", "rolling_papers.png")
+        ]
+        self.cart = {}
+        self.build_ui()
+    
+    def build_ui(self):
+        """Build the main UI of the application"""
+        item_containers = [self.create_item_container(item) for item in self.items]
         
+        row = ft.Row(
+            wrap=True,
+            spacing=10,
+            run_spacing=10,
+            alignment=ft.MainAxisAlignment.CENTER,
+            controls=item_containers,
+            width=self.page.width,
+            height=self.page.height,
+            scroll=ft.ScrollMode.AUTO,
+        )
+        
+        self.page.add(
+                ft.Container(
+                    ft.Container(
+                        content=ft.Image("logo.png", width=200, height=200),
+                        alignment=ft.alignment.top_left,
 
-    def item_container(shop_item):
-        hov_state = False
-
+                    ),
+                    adaptive=True,
+                    height=220,
+                    margin=10,
+                    border_radius=10,
+                    bgcolor=ft.colors.BLUE_100,
+                ),
+                ft.Container(
+                    ft.Column([row]),
+                    alignment=ft.alignment.center,
+                    adaptive=True,
+                    padding=10,
+                    margin=10,
+                )
+        )
+    
+    def create_item_container(self, item):
+        """Create a container for a shop item with hover functionality"""
         add_button = ft.ElevatedButton(
-            content = ft.Icon(name=ft.Icons.ADD, color="green"),
+            content=ft.Icon(name=ft.icons.ADD, color="green"),
             width=50,
             height=50,
-            on_click=lambda e: add_to_cart(shop_item.src.split(".")[0]),
+            on_click=lambda e, item=item: self.add_to_cart(item),
             visible=False,
         )
-        remove_button = ft.ElevatedButton(content=ft.Icon(name=ft.Icons.REMOVE, color="red"), width=50, height=50, visible=False, on_click=lambda e: remove_from_cart(shop_item.src.split(".")[0]))
-
-        def on_hov(e: ft.HoverEvent):
-            nonlocal hov_state
-            if hov_state == True:
-                hov_state = False
-                add_button.visible = False
-                remove_button.visible = False
-            else:
-                hov_state = True
-                print("hovering")
-                add_button.visible = True
-                remove_button.visible = True
-            e.control.update()
-            page.update()
-
-        return ft.Container(
+        
+        remove_button = ft.ElevatedButton(
+            content=ft.Icon(name=ft.icons.REMOVE, color="red"),
+            width=50,
+            height=50,
+            on_click=lambda e, item=item: self.remove_from_cart(item),
+            visible=False,
+        )
+        
+        # Store buttons in the item for later access
+        item.add_button = add_button
+        item.remove_button = remove_button
+        
+        container = ft.Container(
             content=ft.Column(
                 controls=[
-                    ft.Row(controls=[add_button, remove_button], alignment=ft.MainAxisAlignment.END, vertical_alignment=ft.CrossAxisAlignment.CENTER),
-                shop_item,
-                ft.Text(f"Total: {cart.get(shop_item.src.split('.')[0], 0)}", color="black"),
-                ft.Text(shop_item.src.split(".")[0], color="black"),
-            ],
-                
-            alignment=ft.MainAxisAlignment.CENTER,  # Center vertically
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=10,
-        ),
+                    ft.Row(
+                        controls=[add_button, remove_button],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER
+                    ),
+                    item.image,
+                    item.quantity_text,
+                    item.name_text,
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=10,
+            ),
             alignment=ft.alignment.center,
             width=250,
             height=250,
@@ -66,50 +103,51 @@ def main(page: ft.Page):
             margin=10,
             bgcolor=ft.colors.BLUE_50,
             border_radius=5,
-            on_hover=on_hov,
-        )
-    def add_to_cart(item_name):
-        cart[item_name] = cart.get(item_name, 0) + 1
-        print(f"Added {item_name} to cart. Total: {cart[item_name]}")
-
-    def remove_from_cart(item_name):
-        if item_name in cart and cart[item_name] > 0:
-            cart[item_name] -= 1
-            print(f"Removed {item_name} from cart. Total: {cart[item_name]}")
-
-    row = ft.Row(
-        wrap=True,
-        spacing=10,
-        run_spacing=10,
-        alignment=ft.MainAxisAlignment.CENTER,
-        controls=[
-            item_container(tobacco),
-            item_container(cigars),
-            item_container(rolling_papers),
-            item_container(rolling_papers),
-            item_container(rolling_papers),
-            item_container(rolling_papers),
-            item_container(rolling_papers),
-            ],
-        width=page.width,
-        height=page.height,
-        scroll=ft.ScrollMode.AUTO,
-    )
-
-    page.add(
-        ft.Container(
-            ft.Column([
-                row,
-            ],),
-            alignment=ft.alignment.center,
-            adaptive=True,
-            padding=10,
-            margin=10,
-            border=ft.border.all(1),
+            on_hover=lambda e, item=item: self.handle_hover(e, item),
         )
         
+        return container
+    
+    def handle_hover(self, e, item):
+        """Handle hover events for item containers"""
+        if e.data == "true":  # Mouse entered
+            item.add_button.visible = True
+            item.remove_button.visible = True
+        else:  # Mouse exited
+            item.add_button.visible = False
+            item.remove_button.visible = False
         
-    )
+        e.control.update()
+    
+    def add_to_cart(self, item):
+        """Add an item to the cart"""
+        item.quantity_in_cart += 1
+        self.cart[item.name] = item.quantity_in_cart
+        item.quantity_text.value = f"Total: {item.quantity_in_cart}"
+        print(f"Added {item.name} to cart. Total: {item.quantity_in_cart}")
+        print(self.cart)
+        self.page.update()
+    
+    def remove_from_cart(self, item):
+        """Remove an item from the cart"""
+        if item.quantity_in_cart > 0:
+            item.quantity_in_cart -= 1
+            self.cart[item.name] = item.quantity_in_cart
+            item.quantity_text.value = f"Total: {item.quantity_in_cart}"
+            print(f"Removed {item.name} from cart. Total: {item.quantity_in_cart}")
+            print(self.cart)
+            self.page.update()
 
+def main(page: ft.Page):
+    # Create the shop view
 
+    # Desktop settings
+    page.window.title_bar_hidden = True
+    page.window.frameless = False
+    page.window.full_screen = True
+    
+    # Create the shop view with platform-specific settings
+    shop_view = ShopView(page)
+
+# Run the application
 ft.app(main, assets_dir="assets")
